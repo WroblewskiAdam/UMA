@@ -18,15 +18,15 @@ def get_mutant(x, sigma, dimension):
     return y
 
 
-def es_standard(dim, k, init_sigma, max_epoch):
+def es_standard(dim, k, init_sigma, max_iter):
     x = init_population(dim,samples=1)
     succes_mem = []
     sigma = init_sigma
     score_x = None
     score_y = None
 
-    epochs = 0
-    while(epochs < max_epoch):
+    iteration = 0
+    while(iteration < max_iter):
         y = get_mutant(x, sigma, dim)
         
         score_x = evaluate(x)
@@ -37,20 +37,20 @@ def es_standard(dim, k, init_sigma, max_epoch):
         else:
             succes_mem.append(False)
 
-        if epochs%k == 0:
+        if iteration%k == 0:
             if sum(succes_mem)/len(succes_mem) >= 0.2:
                 sigma = 1.22*sigma
             elif sum(succes_mem)/len(succes_mem) < 0.2:
                 sigma = 0.82*sigma
             succes_mem = []
-        print((epochs, score_x[0]))
-        epochs += 1
+        print((iteration, score_x[0]))
+        iteration += 1
 
 
     return (x, score_x)
 
 
-def es_rl(dim, k, init_sigma, max_epoch):
+def es_rl(dim, k, init_sigma, max_iter):
     x = init_population(dim,samples=1)
     succes_mem = []
     sigma = init_sigma
@@ -58,8 +58,8 @@ def es_rl(dim, k, init_sigma, max_epoch):
     score_y = None
     succes_percent = 0
 
-    epochs = 0
-    while(epochs < max_epoch):
+    iteration = 0
+    while(iteration < max_iter):
         y = get_mutant(x, sigma, dim)
         
         score_x = evaluate(x)
@@ -72,7 +72,7 @@ def es_rl(dim, k, init_sigma, max_epoch):
 
         action = None # z RL
 
-        if epochs%k == 0:
+        if iteration%k == 0:
             if action == 1:
                 sigma = 1.22*sigma
             elif action == 0:
@@ -81,8 +81,8 @@ def es_rl(dim, k, init_sigma, max_epoch):
                 sigma = 0.82*sigma
             succes_mem = []
             succes_percent = sum(succes_mem/len(succes_mem))
-        print((epochs, score_x[0]))
-        epochs += 1
+        print((iteration, score_x[0]))
+        iteration += 1
 
 
     return (x, score_x)
@@ -91,7 +91,7 @@ def es_rl(dim, k, init_sigma, max_epoch):
 def main():
 
     print(func)
-    a = es_standard(dim=2, k=10, init_sigma=1, max_epoch=10000)
+    a = es_standard(dim=2, k=10, init_sigma=1, max_iter=10000)
     print(a)
 
 
