@@ -1,101 +1,118 @@
 import numpy as np
+import pandas as pd
 from cec2017.functions import f4 as func
 
-def init_population(dimension, samples):
-    # Inicjalizacja osobnika do ES 1+1
-    # np.random.seed(10)
-    x = np.random.uniform(-50, 50, size=(samples, dimension))
-    return x
+
+class ES:
+    def __init__(self, dimension, k, init_sigma=1):
+        self.dimension = dimension
+        self.x = self.init_population()
+        self.y = None
+        self.score_x = None
+        self.score_y = None
+        self.success_mem = []
+        self.sigma = init_sigma
+        self.iteration = 0
+        self.k = k
+        self.past_population = []
 
 
-def evaluate(x):
-    val = func(x)
-    return val
+
+    def init_population(self, samples = 1):
+        # Inicjalizacja osobnika do ES 1+1
+        # np.random.seed(10)
+        x = np.random.uniform(-50, 50, size=(samples, self.dimension))
+        return x
 
 
-def get_mutant(x, sigma, dimension):
-    y = x + sigma * np.random.normal(loc=0.0, scale=1.0, size=dimension)
-    return y
+    def evaluate(self, x):
+        val = func(x)
+        return val
 
 
-def es_standard(dim, k, init_sigma, max_iter):
-    x = init_population(dim,samples=1)
-    succes_mem = []
-    sigma = init_sigma
-    score_x = None
-    score_y = None
+    def get_mutant(self, x):
+        y = x + self.sigma * np.random.normal(loc=0.0, scale=1.0, size=self.dimension)
+        return y
 
-    iteration = 0
-    while(iteration < max_iter):
-        y = get_mutant(x, sigma, dim)
+
+    def es_standard(self, max_iter, k):
+        self.iteration = 0
+
+        while(self.iteration < max_iter):
+            self.y = self.get_mutant(self.x)
+            self.past_population.append(self.x)
+
+            self.score_x = self.evaluate(self.x)
+            self.score_y = self.evaluate(self.y)
+            if self.score_y < self.score_x:
+                self.success_mem.append(True)
+                self.x = self.y
+            else:
+                self.success_mem.append(False)
+
+            if self.iteration % k == 0:
+                avg_distance = self.calc_distance()
+                bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf]
+                labels = np.arange(0,len(bins)-1,1)
+                binned_avg_distace = pd.cut(x=[avg_distance], bins=bins, labels=labels)[0]
+                print(binned_avg_distace)
+                if sum(self.success_mem)/len(self.success_mem) >= 0.2:
+                    self.sigma = 1.22*self.sigma
+                elif sum(self.success_mem)/len(self.success_mem) < 0.2:
+                    self.sigma = 0.82*self.sigma
+                self.success_mem = []
+                self.past_population = []
+            # print((self.iteration, self.score_x[0]))
+            self.iteration += 1
+
+
+        return (self.x, self.score_x)
+
+
+    def es_rl(self, action):
+        self.iteration = 0
+
+        while(self.iteration < self.k):
+            self.past_population.append(self.x)
+            self.y = self.get_mutant(self.x)
+            
+            self.score_x = self.evaluate(self.x)
+            self.score_y = self.evaluate(self.y)
+            if self.score_y < self.score_x:
+                self.succes_mem.append(True)
+                self.x = self.y
+            else:
+                self.succes_mem.append(False)
+
+            if self.iteration >= self.k:
+                success_percent = round(sum(self.succes_mem)/len(self.succes_mem))
+                avg_distance = self.calc_distance()
+                bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf]
+                labels = np.arange(0,len(bins)-1,1)
+                binned_avg_distace = pd.cut(x=[avg_distance], bins=bins, labels=labels)[0]
+
+                self.succes_mem = []
+                self.iteration = 0
+                state = (success_percent, binned_avg_distace)
+                return (state, self.x)
+
+    def calc_distance(self):
+        mass_center = np.array(self.past_population).mean(0)
+        distance = 0
+        for x in self.past_population:
+            distance += np.linalg.norm(mass_center - x)
+        return distance
         
-        score_x = evaluate(x)
-        score_y = evaluate(y)
-        if score_y < score_x:
-            succes_mem.append(True)
-            x = y
-        else:
-            succes_mem.append(False)
-
-        if iteration%k == 0:
-            if sum(succes_mem)/len(succes_mem) >= 0.2:
-                sigma = 1.22*sigma
-            elif sum(succes_mem)/len(succes_mem) < 0.2:
-                sigma = 0.82*sigma
-            succes_mem = []
-        print((iteration, score_x[0]))
-        iteration += 1
-
-
-    return (x, score_x)
-
-
-def es_rl(dim, k, init_sigma, max_iter):
-    x = init_population(dim,samples=1)
-    succes_mem = []
-    sigma = init_sigma
-    score_x = None
-    score_y = None
-    succes_percent = 0
-
-    iteration = 0
-    while(iteration < max_iter):
-        y = get_mutant(x, sigma, dim)
-        
-        score_x = evaluate(x)
-        score_y = evaluate(y)
-        if score_y < score_x:
-            succes_mem.append(True)
-            x = y
-        else:
-            succes_mem.append(False)
-
-        action = None # z RL
-
-        if iteration%k == 0:
-            if action == 1:
-                sigma = 1.22*sigma
-            elif action == 0:
-                sigma = sigma
-            elif action ==-1:
-                sigma = 0.82*sigma
-            succes_mem = []
-            succes_percent = sum(succes_mem/len(succes_mem))
-        print((iteration, score_x[0]))
-        iteration += 1
-
-
-    return (x, score_x)
-
 
 def main():
+    my_ES = ES(50,10)
+    my_ES.es_standard(10000, k=10)
 
-    print(func)
-    a = es_standard(dim=2, k=10, init_sigma=1, max_iter=10000)
-    print(a)
-
-
-
+    # bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf]
+    # labels = np.arange(0,len(bins)-1,1)
+    # binned = pd.cut(x=[200], bins=bins, labels=labels)
+    # print(binned[0])
 
 if __name__ == "__main__":
     main()
+   
