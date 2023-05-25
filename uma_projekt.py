@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from cec2017.functions import f4 as func
-
+from qlearning import Q_learn_agent
 
 class ES:
     def __init__(self, dimension, k, init_sigma=1):
@@ -69,13 +69,18 @@ class ES:
         return (self.x, self.score_x)
 
 
-    def es_rl(self, action):
+    def es_rl_training(self, num_epochs, num_iter, k, Q):
         self.iteration = 0
+        for _ in range(num_epochs):
+            self.x = self.init_population()
+            self.es_rl(num_iter, k, Q)
 
-        while(self.iteration < self.k):
+    def es_rl(self, num_iter, k, Q: Q_learn_agent):
+        state = ()
+        action = 0
+        while(self.iteration < num_iter):
             self.past_population.append(self.x)
             self.y = self.get_mutant(self.x)
-            
             self.score_x = self.evaluate(self.x)
             self.score_y = self.evaluate(self.y)
             if self.score_y < self.score_x:
@@ -84,17 +89,27 @@ class ES:
             else:
                 self.succes_mem.append(False)
 
-            if self.iteration >= self.k:
+            if self.iteration % k == 0:
                 success_percent = round(sum(self.succes_mem)/len(self.succes_mem))
                 avg_distance = self.calc_distance()
                 bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf]
                 labels = np.arange(0,len(bins)-1,1)
                 binned_avg_distace = pd.cut(x=[avg_distance], bins=bins, labels=labels)[0]
-
+                action = Q.pick_action(state) if self.iteration!=0 else 1
+                match action:
+                    case 0:
+                        self.sigma = 0.82*self.sigma
+                    case 2:
+                        self.sigma = 1.22*self.sigma
+                    case _:
+                        pass
                 self.succes_mem = []
                 self.iteration = 0
+                prev_state = state
                 state = (success_percent, binned_avg_distace)
-                return (state, self.x)
+                if self.iteration!=0:
+                    Q.learn(success_percent, prev_state, state, action)
+
 
     def calc_distance(self):
         mass_center = np.array(self.past_population).mean(0)
