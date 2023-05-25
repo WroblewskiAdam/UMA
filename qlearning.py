@@ -35,9 +35,10 @@ class Q_learn_agent:
         return np.argmax(self.Q[state])
     
     def learn(self, reward, prev_state, state, action):
-        update = reward + self.gamma * np.max(self.Q[prev_state]) \
-            - self.Q[prev_state][action]
-        self.Q[state][action] += reward * update
+        if self.is_training:
+            update = reward + self.gamma * np.max(self.Q[prev_state]) \
+                - self.Q[prev_state][action]
+            self.Q[state][action] += reward * update
     
     def load_qfunction(self, path):
         with open(path, 'rb') as f:
