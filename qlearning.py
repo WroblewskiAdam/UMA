@@ -6,11 +6,6 @@ import pickle
 # from uma_projekt import ES
 import pandas as pd
 
-percent_number = 100
-dim_state_number = 21
-action_number = 3
-
-shape = [100, 21, 3]
 
 class Q_learn_agent:
     def __init__(self, gamma, beta, epsilon, shape, is_training) -> None:
@@ -19,18 +14,18 @@ class Q_learn_agent:
         self.gamma = gamma
         self.epsilon = epsilon
         self.is_training = is_training
-        self.Q = self.q_func_inicialize(shape)
+        self.q_func_inicialize(shape)
 
     def q_func_inicialize(self, shape):
         self.Q = np.zeros(shape)
 
-    def dump_qfunction(self):
-        with open(f"model/qfunc.pickle", 'wb') as f:
+    def dump_qfunction(self, path):
+        with open(f"{path}", 'wb') as f:
             pickle.dump(self.Q, f)
 
     def pick_action(self, state):
         if random.random() < self.epsilon and self.is_training:
-                return random.randint(0, 3)
+                return random.randint(0, 2)
         return np.argmax(self.Q[state])
     
     def learn(self, reward, prev_state, state, action):
@@ -41,14 +36,5 @@ class Q_learn_agent:
     
     def load_qfunction(self, path):
         with open(path, 'rb') as f:
-            self.Q = pickle.load()
-
-
-
-
-# q_func = q_func_inicialize([percent_number, dim_state_number, action_number])
-
-# print(func([[-50,100]]))
-
-# print(q_func)
+            self.Q = pickle.load(f)
 
