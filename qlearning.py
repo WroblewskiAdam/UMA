@@ -13,17 +13,16 @@ action_number = 3
 shape = [100, 21, 3]
 
 class Q_learn_agent:
-    def __init__(self, gamma, beta, epsilon, shape, is_training, ES: ES) -> None:
+    def __init__(self, gamma, beta, epsilon, shape, is_training) -> None:
         self.gamma = gamma
         self.beta = beta
         self.gamma = gamma
         self.epsilon = epsilon
         self.is_training = is_training
         self.Q = self.q_func_inicialize(shape)
-        self.ES = ES
 
     def q_func_inicialize(self, shape):
-        return np.zeros(shape)
+        self.Q = np.zeros(shape)
 
     def dump_qfunction(self):
         with open(f"model/qfunc.pickle", 'wb') as f:

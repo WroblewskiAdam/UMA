@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
-from cec2017.functions import f4 as func
+from cec2017 import functions
 from qlearning import Q_learn_agent
 
+
 class ES:
-    def __init__(self, dimension, k, init_sigma=1):
+    def __init__(self, dimension, k, function, init_sigma=1):
         self.dimension = dimension
         self.x = self.init_population()
         self.y = None
@@ -15,7 +16,7 @@ class ES:
         self.iteration = 0
         self.k = k
         self.past_population = []
-
+        self.function = function
 
 
     def init_population(self, samples = 1):
@@ -26,7 +27,7 @@ class ES:
 
 
     def evaluate(self, x):
-        val = func(x)
+        val = self.function(x)
         return val
 
 
@@ -51,29 +52,22 @@ class ES:
                 self.success_mem.append(False)
 
             if self.iteration % k == 0:
-                avg_distance = self.calc_distance()
-                bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf]
-                labels = np.arange(0,len(bins)-1,1)
-                binned_avg_distace = pd.cut(x=[avg_distance], bins=bins, labels=labels)[0]
-                print(binned_avg_distace)
                 if sum(self.success_mem)/len(self.success_mem) >= 0.2:
                     self.sigma = 1.22*self.sigma
                 elif sum(self.success_mem)/len(self.success_mem) < 0.2:
                     self.sigma = 0.82*self.sigma
                 self.success_mem = []
                 self.past_population = []
-            # print((self.iteration, self.score_x[0]))
             self.iteration += 1
-
-
         return (self.x, self.score_x)
 
 
     def es_rl_training(self, num_epochs, num_iter, k, Q):
-        self.iteration = 0
         for _ in range(num_epochs):
+            self.iteration = 0
             self.x = self.init_population()
             self.es_rl(num_iter, k, Q)
+
 
     def es_rl(self, num_iter, k, Q: Q_learn_agent):
         state = ()
@@ -92,9 +86,6 @@ class ES:
             if self.iteration % k == 0:
                 success_percent = round(sum(self.succes_mem)/len(self.succes_mem))
                 avg_distance = self.calc_distance()
-                bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf]
-                labels = np.arange(0,len(bins)-1,1)
-                binned_avg_distace = pd.cut(x=[avg_distance], bins=bins, labels=labels)[0]
                 action = Q.pick_action(state) if self.iteration!=0 else 1
                 match action:
                     case 0:
@@ -106,7 +97,7 @@ class ES:
                 self.succes_mem = []
                 self.iteration = 0
                 prev_state = state
-                state = (success_percent, binned_avg_distace)
+                state = (success_percent, avg_distance)
                 if self.iteration!=0:
                     Q.learn(success_percent, prev_state, state, action)
 
@@ -116,18 +107,17 @@ class ES:
         distance = 0
         for x in self.past_population:
             distance += np.linalg.norm(mass_center - x)
-        return distance
+        bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf] #dyskretyzacja stanu
+        labels = np.arange(0,len(bins)-1,1)
+        binned_avg_distace = pd.cut(x=[distance], bins=bins, labels=labels)[0]
+        return binned_avg_distace
         
 
-def main():
-    my_ES = ES(50,10)
-    my_ES.es_standard(10000, k=10)
+# def main():
+#     my_ES = ES(50,10, functions.f5)
+#     my_ES.es_rl(10000, k=10)
 
-    # bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf]
-    # labels = np.arange(0,len(bins)-1,1)
-    # binned = pd.cut(x=[200], bins=bins, labels=labels)
-    # print(binned[0])
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
    
