@@ -37,7 +37,7 @@ class Q_learn_agent:
         if self.is_training:
             update = reward + self.gamma * np.max(self.Q[prev_state]) \
                 - self.Q[prev_state][action]
-            self.Q[state][action] += reward * update
+            self.Q[state][action] += self.beta * update
     
     def load_qfunction(self, path):
         with open(path, 'rb') as f:

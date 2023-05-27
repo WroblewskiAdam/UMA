@@ -36,7 +36,7 @@ class ES:
         return y
 
 
-    def es_standard(self, max_iter, k):
+    def es_standard(self, max_iter):
         self.iteration = 0
 
         while(self.iteration < max_iter):
@@ -51,7 +51,7 @@ class ES:
             else:
                 self.success_mem.append(False)
 
-            if self.iteration % k == 0:
+            if self.iteration % self.k == 0:
                 if sum(self.success_mem)/len(self.success_mem) >= 0.2:
                     self.sigma = 1.22*self.sigma
                 elif sum(self.success_mem)/len(self.success_mem) < 0.2:
@@ -62,14 +62,18 @@ class ES:
         return (self.x, self.score_x)
 
 
-    def es_rl_training(self, num_epochs, num_iter, k, Q):
+    def es_rl_training(self, num_epochs, num_iter, Q):
         for _ in range(num_epochs):
             self.iteration = 0
             self.x = self.init_population()
-            self.es_rl(num_iter, k, Q)
+            print("Epoka: ", _)
+            self.es_rl(num_iter, Q)
+            self.past_population = []
+            self.success_mem = []
 
 
-    def es_rl(self, num_iter, k, Q: Q_learn_agent):
+
+    def es_rl(self, num_iter, Q: Q_learn_agent):
         state = ()
         action = 0
         while(self.iteration < num_iter):
@@ -78,13 +82,13 @@ class ES:
             self.score_x = self.evaluate(self.x)
             self.score_y = self.evaluate(self.y)
             if self.score_y < self.score_x:
-                self.succes_mem.append(True)
+                self.success_mem.append(True)
                 self.x = self.y
             else:
-                self.succes_mem.append(False)
+                self.success_mem.append(False)
 
-            if self.iteration % k == 0:
-                success_percent = round(sum(self.succes_mem)/len(self.succes_mem))
+            if self.iteration % self.k == 0:
+                success_percent = round(sum(self.success_mem)/len(self.success_mem))
                 avg_distance = self.calc_distance()
                 action = Q.pick_action(state) if self.iteration!=0 else 1
                 match action:
@@ -94,20 +98,24 @@ class ES:
                         self.sigma = 1.22*self.sigma
                     case _:
                         pass
-                self.succes_mem = []
-                self.iteration = 0
+                self.success_mem = []
                 prev_state = state
                 state = (success_percent, avg_distance)
+                print(state)
                 if self.iteration!=0:
                     Q.learn(success_percent, prev_state, state, action)
 
+            self.iteration += 1
+            # print("Iter: %d, fcel: %d"%(self.iteration, self.evaluate(self.x)))
+            print("Iter: ", self.iteration, " fcel: ", self.evaluate(self.x))
+            
 
     def calc_distance(self):
         mass_center = np.array(self.past_population).mean(0)
         distance = 0
         for x in self.past_population:
             distance += np.linalg.norm(mass_center - x)
-        bins = [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf] #dyskretyzacja stanu
+        bins = [-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf] #dyskretyzacja stanu
         labels = np.arange(0,len(bins)-1,1)
         binned_avg_distace = pd.cut(x=[distance], bins=bins, labels=labels)[0]
         return binned_avg_distace
