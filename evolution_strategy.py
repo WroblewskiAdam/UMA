@@ -45,7 +45,6 @@ class ES:
         while(self.iteration < max_iter):
             self.y = self.get_mutant(self.x)
             self.past_population.append(self.x)
-
             self.score_x = self.evaluate(self.x)
             self.score_y = self.evaluate(self.y)
             if self.score_y < self.score_x:
@@ -66,17 +65,17 @@ class ES:
         return (self.x, self.score_x)
 
 
-    def es_rl_training(self, num_epochs, num_iter, Q):
+    def es_rl_training(self, num_epochs, num_iter, Q: Q_learn_agent):
         distance_array = list()
         for _ in range(num_epochs):
             self.iteration = 0
             self.sigma = 1
-            self.x = self.init_population()
+            self.x = self.init_population(is_training=Q.is_training)
             print("Epoka: ", _)
             array = self.es_rl(num_iter, Q)
             self.training_epoch += 1
             distance_array.extend(array)
-        self.hist(distance_array)
+
 
 
     def es_rl(self, num_iter, Q: Q_learn_agent):
@@ -95,7 +94,7 @@ class ES:
                 self.success_mem.append(False)
 
             if self.iteration % self.k == 0:
-                success_percent = round(100*sum(self.success_mem)/len(self.success_mem)/self.k)
+                success_percent = round(sum(self.success_mem)/len(self.success_mem)*self.k)
                 avg_distance = self.calc_distance()
                 distance_array.append(avg_distance)
                 action = Q.pick_action(state) if self.iteration!=0 else 0
@@ -109,7 +108,7 @@ class ES:
                 self.success_mem = []
                 prev_state = state
                 state = (success_percent, avg_distance)
-                print(state)
+                # print(state)
                 self.past_population = []
                 self.success_mem = []
                 if self.iteration!=0:
@@ -117,7 +116,8 @@ class ES:
 
             self.iteration += 1
             # print("Iter: %d, fcel: %d"%(self.iteration, self.evaluate(self.x)))
-            print("Epoka uczenia: ", self.training_epoch, "Iter: ", self.iteration, " fcel: ", self.evaluate(self.x))
+            # print("Epoka uczenia: ", self.training_epoch, "Iter: ", self.iteration, " fcel: ", self.evaluate(self.x))
+        # self.hist(distance_array)
         return distance_array
             
             
@@ -126,7 +126,8 @@ class ES:
         distance = 0
         for x in self.past_population:
             distance += np.linalg.norm(mass_center - x)
-        bins = [-0.1,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,10,20,30,40,50,60,70,80,90,100,np.inf] #dyskretyzacja stanu
+        print(distance)
+        bins = [-0.1,0.02,0.04,0.06,0.08,0.1,0.3,0.5,0.7,0.9,0.92,0.94,0.96,0.98,1,10,np.inf] #dyskretyzacja stanu
         labels = np.arange(0,len(bins)-1,1)
         binned_avg_distace = pd.cut(x=[distance], bins=bins, labels=labels)[0]
         return binned_avg_distace
