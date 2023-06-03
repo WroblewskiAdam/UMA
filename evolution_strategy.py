@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from cec2017 import functions
 from qlearning import Q_learn_agent
+from matplotlib import pyplot as plt
 
 
 class ES:
@@ -20,9 +21,10 @@ class ES:
         self.training_epoch = 0
 
 
-    def init_population(self, samples = 1):
+    def init_population(self, samples = 1, is_training=False):
         # Inicjalizacja osobnika do ES 1+1
-        np.random.seed(10)
+        if not is_training:
+            np.random.seed(10)
         x = np.random.uniform(-50, 50, size=(samples, self.dimension))
         return x
 
@@ -40,7 +42,6 @@ class ES:
 
     def es_standard(self, max_iter):
         self.iteration = 0
-
         while(self.iteration < max_iter):
             self.y = self.get_mutant(self.x)
             self.past_population.append(self.x)
@@ -66,16 +67,20 @@ class ES:
 
 
     def es_rl_training(self, num_epochs, num_iter, Q):
+        distance_array = list()
         for _ in range(num_epochs):
             self.iteration = 0
             self.sigma = 1
             self.x = self.init_population()
             print("Epoka: ", _)
-            self.es_rl(num_iter, Q)
+            array = self.es_rl(num_iter, Q)
             self.training_epoch += 1
+            distance_array.extend(array)
+        self.hist(distance_array)
 
 
     def es_rl(self, num_iter, Q: Q_learn_agent):
+        distance_array = []
         state = ()
         action = 0
         while(self.iteration < num_iter):
@@ -92,6 +97,7 @@ class ES:
             if self.iteration % self.k == 0:
                 success_percent = round(100*sum(self.success_mem)/len(self.success_mem)/self.k)
                 avg_distance = self.calc_distance()
+                distance_array.append(avg_distance)
                 action = Q.pick_action(state) if self.iteration!=0 else 0
                 match action:
                     case 1:
@@ -112,9 +118,9 @@ class ES:
             self.iteration += 1
             # print("Iter: %d, fcel: %d"%(self.iteration, self.evaluate(self.x)))
             print("Epoka uczenia: ", self.training_epoch, "Iter: ", self.iteration, " fcel: ", self.evaluate(self.x))
-
+        return distance_array
             
-
+            
     def calc_distance(self):
         mass_center = np.array(self.past_population).mean(0)
         distance = 0
@@ -124,6 +130,11 @@ class ES:
         labels = np.arange(0,len(bins)-1,1)
         binned_avg_distace = pd.cut(x=[distance], bins=bins, labels=labels)[0]
         return binned_avg_distace
+    
+    def hist(self, array):
+        plt.hist(array, bins='auto')
+        plt.show()
+        
         
 
 # def main():
