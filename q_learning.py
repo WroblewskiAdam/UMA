@@ -1,22 +1,13 @@
 import numpy as np 
 import random
-from cec2017.functions import f4 as func
-# import matplotlib.pyplot as plt
 import pickle
-# from uma_projekt import ES
-import pandas as pd
-
 
 class Q_learn_agent:
-    def __init__(self, gamma, beta, epsilon, shape, is_training) -> None:
-        self.gamma = gamma
+    def __init__(self, shape, is_training=False, beta=None, gamma=None, epsilon=None) -> None:
         self.beta = beta
         self.gamma = gamma
         self.epsilon = epsilon
         self.is_training = is_training
-        self.q_func_inicialize(shape)
-
-    def q_func_inicialize(self, shape):
         self.Q = np.zeros(shape)
 
     def dump_qfunction(self, path):
