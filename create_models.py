@@ -7,20 +7,19 @@ import numpy as np
 
 
 def main():
-    testing_k = [5, 10, 20]
-    testing_beta = [0.2, 0.4, 0.6, 0.8]
-    testing_gamma = [0.2, 0.4, 0.6, 0.8]
+    testing_k = [5, 10, 20, 50]
+    testing_beta = [0.1, 0.3, 0.5, 0.7, 0.9]
+    testing_gamma = [0.01]
     testing_epsilon = [0.2, 0.4, 0.6, 0.8]
 
     function = functions.f4
     dimension = 10 # stała
 
-    k = 10
-    iterations = 10000 # stała
+    k = 50
+    iterations = 1000 # stała
     training_epochs = 200 # stała 
-    shape = [k+1, 16, 3]
 
-    beta = 0.6
+    beta = 0.3
     gamma = 0.4
     epsilon = 0.4
 
@@ -31,10 +30,11 @@ def main():
         "st_dev" : []
     }
     
-    for beta in testing_beta:
+    for gamma in testing_gamma:
+        shape = [k+1, 16, 3]
         Q_ag = Q_learn_agent(shape=shape, is_training=True, beta=beta, gamma=gamma, epsilon=epsilon)
-        my_ES = ES(dimension=dimension, k=k, function=function, init_sigma=1)
-        my_ES.es_rl_training(max_epochs=training_epochs, max_iter=iterations , Q_ag=Q_ag)
+        my_ES = ES(dimension=dimension, k=k, function=function)
+        my_ES.es_rl_training(max_epochs=training_epochs, max_iter=iterations, Q_ag=Q_ag)
         file_name = f"model_g{int(gamma*10)}_b{int(beta*10)}_e{epsilon*10}_k{k}_f4.pickle" 
         Q_ag.dump_qfunction(file_name)#zapis do pliku
 
@@ -42,7 +42,7 @@ def main():
         #wywołanie nauczonego algorytmu    
         for i in range(30):
             Q_ag.is_training = False
-            my_ES = ES(dimension=dimension, k=k, function=function, init_sigma=1)
+            my_ES = ES(dimension=dimension, k=k, function=function)
             result = my_ES.es_rl(iterations, Q_ag)
             result_list.append(result)
         
@@ -52,7 +52,10 @@ def main():
         data["st_dev"].append(np.std(result_list))
     
     df = pd.DataFrame(data, index=testing_gamma)
-    print(df.to_latex(index=False, float_format="{:.2f}".format, decimal=',') )
+    latex_code = df.to_latex(index=True, decimal=',', float_format="%.2f")
+    latex_code = latex_code.replace("\\\n", "\\ \hline\n")
+    latex_code = latex_code.replace(".", ",")
+    print(latex_code)
     df.to_excel('beta_testing.xlsx')
 
 

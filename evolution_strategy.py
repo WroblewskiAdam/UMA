@@ -6,14 +6,14 @@ from matplotlib import pyplot as plt
 
 
 class ES:
-    def __init__(self, dimension, k, function, init_sigma=1):
+    def __init__(self, dimension, k, function):
         self.dimension = dimension
         self.x = None
         self.y = None
         self.score_x = None
         self.score_y = None
         self.success_mem = []
-        self.sigma = init_sigma
+        self.sigma = 1
         self.iteration = 0
         self.k = k
         self.past_population = []
@@ -70,7 +70,6 @@ class ES:
             array = self.es_rl(max_iter, Q_ag)
             self.training_epoch += 1
             # distance_array.extend(array)
-
 
 
     def es_rl(self, max_iter, Q: Q_learn_agent):
