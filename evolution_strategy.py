@@ -19,6 +19,7 @@ class ES:
         self.past_population = []
         self.function = function
         self.training_epoch = 0
+        self.past_results = []
 
     def init_population(self, samples = 1):# Inicjalizacja osobnika początkowego
         x = np.random.uniform(-50, 50, size=(samples, self.dimension))
@@ -57,7 +58,7 @@ class ES:
                 self.past_population = []
             self.iteration += 1
             print(self.evaluate(self.x))
-        return (self.x, self.score_x)
+        return self.score_x
 
 
     def es_rl_training(self, max_epochs, max_iter, Q_ag: Q_learn_agent):
@@ -82,6 +83,7 @@ class ES:
             self.y = self.get_mutant(self.x)
             self.score_x = self.evaluate(self.x)
             self.score_y = self.evaluate(self.y)
+            self.past_results.append(self.score_x)
             if self.score_y < self.score_x:
                 self.success_mem.append(True)
                 self.x = self.y
@@ -89,6 +91,7 @@ class ES:
                 self.success_mem.append(False)
 
             if self.iteration % self.k == 0:
+                reward2 = max(self.past_results) - min(self.past_results)
                 success_percent = round(sum(self.success_mem)/len(self.success_mem)*self.k)
                 avg_distance = self.calc_distance()
                 distance_array.append(avg_distance)
@@ -105,8 +108,9 @@ class ES:
                 state = (success_percent, avg_distance)
                 self.past_population = []
                 self.success_mem = []
+                self.past_results = []
                 if self.iteration!=0:
-                    Q.learn(success_percent, prev_state, state, action)
+                    Q.learn(reward2, prev_state, state, action)
 
             self.iteration += 1
             # print("Iter: %d, fcel: %d"%(self.iteration, self.evaluate(self.x)))
