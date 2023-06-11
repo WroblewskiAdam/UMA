@@ -26,7 +26,7 @@ class Q_learn_agent:
         prev_state = self.discretization(prev_state)
         if self.is_training:
             update = reward + self.gamma * np.max(self.Q[state]) - self.Q[prev_state][action]
-            self.Q[state][action] += self.beta * update
+            self.Q[prev_state][action] += self.beta * update
     
     def load_qfunction(self, path):
         with open(path, 'rb') as f:

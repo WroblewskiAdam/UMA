@@ -3,23 +3,19 @@ from q_learning import Q_learn_agent
 import pandas as pd
 import matplotlib.pyplot as plt
 from cec2017 import functions
-import time
 import numpy as np
 
 
+gamma = 0.5
+beta = 0.5
+epsilon = 0.9
 
-gamma = 0.3
-beta = 0.9
-epsilon = 0.5
-
-dimension = 10 # stała
+dimension = 10
 k = 20
-function = functions.f7
-es_iterations = 1000 # stała
-train_epochs = 200 # stała 
+function = functions.f6
+es_iterations = 1000
+train_epochs = 200
 
-
-# gamma = [2,4]
 shape = [11, 16, 3]
 
 data = {
@@ -32,19 +28,18 @@ data = {
 
 def main():
     results = []
-    # for my_g in gamma:
     g_array = []
-    # Q_ag = Q_learn_agent(gamma= gamma,beta= beta,epsilon= epsilon, is_training= True)
-    # my_ES = ES(dimension=dimension, k=k, function=function)
-    # my_ES.es_rl_training(max_epochs=train_epochs, max_iter=es_iterations, Q_ag=Q_ag, reward=Reward.Percent)
-    # Q_ag.dump_qfunction('f7alt')
-    for i in range(1):
+    Q_ag = Q_learn_agent(gamma= gamma,beta= beta,epsilon= epsilon, is_training= True)
+    my_ES = ES(dimension=dimension, k=k, function=function)
+    my_ES.es_rl_training(max_epochs=train_epochs, max_iter=es_iterations, Q_ag=Q_ag, reward=Reward.LogDiff)
+    Q_ag.dump_qfunction('f7alt')
+    for i in range(30):
         Q_ag = Q_learn_agent(gamma= gamma,beta= beta,epsilon= epsilon, is_training= False)
         Q_ag.load_qfunction(f'model_g5_b5_e5.0_k20_f7.pickle')
         my_ES = ES(dimension=dimension, k=k, function=function)
         result, x = my_ES.es_rl(es_iterations, Q_ag,reward=Reward.Percent)
         g_array.append(result)
-    for _ in range(1):
+    for _ in range(30):
         my_ES = ES(dimension=dimension, k=k, function=function)
         st_resoult, x = my_ES.es_standard(1000)
         results.append(st_resoult)
@@ -56,7 +51,6 @@ def main():
     data["max"].append(*max(results))
     data["min"].append(*min(results))
     data["st_dev"].append(np.std(results))
-
 
     df = pd.DataFrame(data, index=['qlearn', 'standard'])
     latex_code = df.to_latex(index=True, decimal=',', float_format="%.2f")

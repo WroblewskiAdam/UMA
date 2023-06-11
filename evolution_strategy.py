@@ -10,8 +10,6 @@ class Reward(Enum):
     LogDiff = 1
 
 
-
-
 class ES:
     def __init__(self, dimension, k, function):
         self.dimension = dimension
@@ -39,13 +37,11 @@ class ES:
 
     def get_mutant(self, x):
         y = x + self.sigma * np.random.normal(loc=0.0, scale=1.0, size=self.dimension)
-        # print(y)
         return y
 
     def es_standard(self, max_iter):
         self.init_population()
         self.iteration = 0
-        distance_array = []
         while(self.iteration < max_iter):
             self.y = self.get_mutant(self.x)
             self.past_population.append(self.x)
@@ -58,8 +54,6 @@ class ES:
                 self.success_mem.append(False)
 
             if self.iteration % self.k == 0:
-                avg_distance = self.calc_distance()
-                distance_array.append(avg_distance)
                 if sum(self.success_mem)/len(self.success_mem) >= 0.2:
                     self.sigma = 1.22*self.sigma
                 elif sum(self.success_mem)/len(self.success_mem) < 0.2:
@@ -104,9 +98,7 @@ class ES:
                 success_percent = sum(self.success_mem)/len(self.success_mem)
                 log_diff = np.log2(max(self.past_results)) - np.log2(min(self.past_results))
                 avg_distance = self.calc_distance()
-                distance_array.append(avg_distance)
                 action = Q.pick_action(state) if self.iteration!=0 else 0
-                # print(action)
                 match action:
                     case 1:
                         self.sigma = 0.82*self.sigma
@@ -123,9 +115,7 @@ class ES:
                 if self.iteration!=0:
                     Q.learn(log_diff, prev_state, state, action) if reward == Reward.LogDiff\
                     else Q.learn(success_percent, prev_state, state, action)
-
             self.iteration += 1
-            # print("Iter: %d, fcel: %d"%(self.iteration, self.evaluate(self.x)))
             print("Epoka uczenia: ", self.training_epoch, "Iter: ", self.iteration, " fcel: ", self.evaluate(self.x))
         return self.score_x, self.x
             
