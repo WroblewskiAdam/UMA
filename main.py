@@ -8,13 +8,13 @@ import numpy as np
 
 
 
-gamma = 0.5
-beta = 0.5
-epsilon = 0.3
+gamma = 0.3
+beta = 0.9
+epsilon = 0.5
 
 dimension = 10 # stała
 k = 20
-function = functions.f6
+function = functions.f7
 es_iterations = 1000 # stała
 train_epochs = 200 # stała 
 
@@ -34,19 +34,19 @@ def main():
     results = []
     # for my_g in gamma:
     g_array = []
-    # Q_ag = Q_learn_agent(gamma= gamma,beta= beta,epsilon= epsilon, shape=shape, is_training= True)
+    # Q_ag = Q_learn_agent(gamma= gamma,beta= beta,epsilon= epsilon, is_training= True)
     # my_ES = ES(dimension=dimension, k=k, function=function)
-    # my_ES.es_rl_training(max_epochs=train_epochs, max_iter=es_iterations, Q_ag=Q_ag, reward=Reward.LogDiff)
+    # my_ES.es_rl_training(max_epochs=train_epochs, max_iter=es_iterations, Q_ag=Q_ag, reward=Reward.Percent)
     # Q_ag.dump_qfunction('f7alt')
-    for i in range(30):
-        Q_ag = Q_learn_agent(gamma= gamma,beta= beta,epsilon= epsilon, shape=shape, is_training= False)
-        Q_ag.load_qfunction(f'model_g5_b5_e3.0_k20_f6alt.pickle')
+    for i in range(1):
+        Q_ag = Q_learn_agent(gamma= gamma,beta= beta,epsilon= epsilon, is_training= False)
+        Q_ag.load_qfunction(f'model_g5_b5_e5.0_k20_f7.pickle')
         my_ES = ES(dimension=dimension, k=k, function=function)
-        result = my_ES.es_rl(es_iterations, Q_ag,reward=Reward.Percent)
+        result, x = my_ES.es_rl(es_iterations, Q_ag,reward=Reward.Percent)
         g_array.append(result)
-    for _ in range(30):
+    for _ in range(1):
         my_ES = ES(dimension=dimension, k=k, function=function)
-        st_resoult = my_ES.es_standard(1000)
+        st_resoult, x = my_ES.es_standard(1000)
         results.append(st_resoult)
     data["srednia"].append(np.mean(g_array))
     data["max"].append(*max(g_array))
@@ -70,4 +70,3 @@ def main():
 if __name__ == "__main__":
     main()
    
-
