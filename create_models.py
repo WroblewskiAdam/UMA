@@ -12,15 +12,15 @@ def main():
     testing_gamma = [0.1, 0.3, 0.5, 0.7, 0.9]
     testing_epsilon = [0.1, 0.3, 0.5, 0.7, 0.9]
 
-    function = functions.f6
+    function = functions.f5
     dimension = 10 # stała
 
     k = 20
     iterations = 1000 # stała
     training_epochs = 200 # stała 
 
-    beta = 0.5
-    gamma = 0.5
+    beta = 0.9
+    gamma = 0.3
     epsilon = 0.4
 
     data = {
@@ -31,11 +31,10 @@ def main():
     }
     
     for epsilon in testing_epsilon:
-        shape = [11, 16, 3]
-        Q_ag = Q_learn_agent(shape=shape, is_training=True, beta=beta, gamma=gamma, epsilon=epsilon)
+        Q_ag = Q_learn_agent(is_training=True, beta=beta, gamma=gamma, epsilon=epsilon)
         my_ES = ES(dimension=dimension, k=k, function=function)
-        my_ES.es_rl_training(max_epochs=training_epochs, max_iter=iterations, Q_ag=Q_ag, reward=Reward.LogDiff)
-        file_name = f"model_g{int(gamma*10)}_b{int(beta*10)}_e{epsilon*10}_k{k}_f6alt.pickle" 
+        my_ES.es_rl_training(max_epochs=training_epochs, max_iter=iterations, Q_ag=Q_ag, reward=Reward.Percent)
+        file_name = f"model_g{int(gamma*10)}_b{int(beta*10)}_e{epsilon*10}_k{k}_f9.pickle" 
         Q_ag.dump_qfunction(file_name)#zapis do pliku
 
         result_list = []
@@ -43,7 +42,7 @@ def main():
         for i in range(30):
             Q_ag.is_training = False
             my_ES = ES(dimension=dimension, k=k, function=function)
-            result = my_ES.es_rl(iterations, Q_ag,reward=Reward.Percent)
+            result, x = my_ES.es_rl(iterations, Q_ag,reward=Reward.Percent)
             result_list.append(result)
         
         data["srednia"].append(np.mean(result_list))
